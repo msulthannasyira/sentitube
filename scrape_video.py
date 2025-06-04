@@ -2,6 +2,12 @@ from flask import Flask, request, send_file, jsonify
 from googleapiclient.discovery import build
 import pandas as pd
 import re
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 app = Flask(__name__)
 
@@ -72,17 +78,16 @@ def get_comments_for_video(youtube, video_id):
 @app.route('/scrape_comments', methods=['POST'])
 def scrape_comments():
     data = request.json
-    api_key = data.get('api_key')
     video_url = data.get('video_url')
-    if not api_key or not video_url:
-        return jsonify({'error': 'api_key and video_url are required'}), 400
+    if not video_url:
+        return jsonify({'error': 'video_url is required'}), 400
 
     video_id = extract_video_id(video_url)
     if not video_id:
         return jsonify({'error': 'Invalid YouTube video URL'}), 400
 
     try:
-        youtube = build('youtube', 'v3', developerKey=api_key)
+        youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
         all_comments = get_comments_for_video(youtube, video_id)
 
         if not all_comments:
